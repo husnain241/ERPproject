@@ -1,0 +1,62 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ERPsystem1.Models
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="loginModel.Email" class="form-control" />
+    </div>
+
+    <div>
+        <label>Password:</label>
+        <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red">@errorMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        var client = HttpClientFactory.CreateClient("ApiClient");
+        var response = await client.PostAsJsonAsync("api/login", loginModel);
+        if (response.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

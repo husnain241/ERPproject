@@ -1,0 +1,85 @@
+﻿@page "/register"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ERPsystem1.Services
+@inject UserService UserService
+@inject NavigationManager Nav
+
+<h3>Register</h3>
+
+<EditForm Model="registerModel" OnValidSubmit="HandleRegister" FormName="registerForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="registerModel.Email" class="form-control" />
+    </div>
+
+    <div>
+        <label>Full Name:</label>
+        <InputText @bind-Value="registerModel.FullName" class="form-control" />
+    </div>
+
+
+    <div>
+        <label>Password:</label>
+        <InputText @bind-Value="registerModel.Password" type="password" class="form-control" />
+    </div>
+    <div>
+        <label>Confirm Password:</label>
+        <InputText @bind-Value="registerModel.ConfirmPassword" type="password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red">@errorMessage</p>
+}
+
+@code {
+    private RegisterModel registerModel = new();
+    private string? errorMessage;
+
+    private async Task HandleRegister()
+    {
+        if (registerModel.Password != registerModel.ConfirmPassword)
+        {
+            errorMessage = "Passwords do not match.";
+            return;
+        }
+
+        var (Succeeded, ErrorMessage) = await UserService.RegisterAsync(registerModel.Email, registerModel.Password, registerModel.FullName);
+
+        if (Succeeded)
+        {
+            Nav.NavigateTo("/login"); // Let the user log in separately
+        }
+        else
+        {
+            errorMessage = ErrorMessage;
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string FullName { get; set; } = string.Empty;
+
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

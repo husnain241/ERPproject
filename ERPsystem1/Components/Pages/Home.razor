@@ -1,0 +1,40 @@
+﻿
+
+@page "/"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using ERPsystem1.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, @userName!</h1>
+
+@if (string.IsNullOrEmpty(userName))
+{
+    <p>Loading user info...</p>
+}
+
+@code {
+    private string? userName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is { IsAuthenticated: true })
+        {
+            var appUser = await UserManager.GetUserAsync(user);
+            userName = appUser?.UserName ?? user.Identity.Name;
+        }
+        else
+        {
+            userName = "Guest";
+        }
+    }
+}
